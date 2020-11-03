@@ -41,7 +41,7 @@ dependencies {
     // (see https://github.com/ReactiveX/RxJava/releases for latest 3.x.x version)
     implementation 'io.reactivex.rxjava2:rxjava:2.2.17'
     implementation 'com.jakewharton:butterknife:10.1.0'
-    implementation files('libs\\classes.jar')
+    implementation files('libs\\gForceSDKAndroid.jar')
     annotationProcessor 'com.jakewharton:butterknife-compiler:10.1.0'
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'com.google.android.material:material:1.2.1'

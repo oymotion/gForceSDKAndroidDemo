@@ -8,13 +8,11 @@ import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.Toast;
 
-//import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -25,14 +23,12 @@ import com.oymotion.gforceprofile.GForceProfile;
 import com.oymotion.gforceprofile.ScanCallback;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
 import butterknife.OnClick;
-//import io.reactivex.disposables.Disposable;
 
 public class MainActivity extends AppCompatActivity {
     @BindView(R.id.scan_toggle_btn)
@@ -40,13 +36,9 @@ public class MainActivity extends AppCompatActivity {
     @BindView(R.id.scan_results)
     RecyclerView recyclerView;
     private ScanResultsAdapter resultsAdapter;
-    private boolean hasClickedScan;
 
     private final static String TAG = MainActivity.class.getSimpleName();
-    private static final int REQUEST_ENABLE_BT = 1;
-    private ArrayList<BluetoothDevice> leDevices = new ArrayList<BluetoothDevice>();
     private BluetoothAdapter bluetoothAdapter;
-    private HashMap<BluetoothDevice, Integer> rssiMap = new HashMap<BluetoothDevice, Integer>();
     private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 1;
     private GForceProfile gForceProfile;
     private final int ACCESS_LOCATION = 1;
@@ -55,20 +47,18 @@ public class MainActivity extends AppCompatActivity {
 
     @SuppressLint("WrongConstant")
     private void getPermission() {
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
-            int permissionCheck = 0;
-            permissionCheck = this.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION);
-            permissionCheck += this.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION);
-            permissionCheck += this.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
+        int permissionCheck = 0;
+        permissionCheck = this.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION);
+        permissionCheck += this.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION);
+        permissionCheck += this.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
 
-            if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
-                //未获得权限
-                this.requestPermissions( // 请求授权
-                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
-                                Manifest.permission.ACCESS_COARSE_LOCATION,
-                                Manifest.permission.READ_EXTERNAL_STORAGE},
-                        ACCESS_LOCATION);// 自定义常量,任意整型
-            }
+        if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
+            //未获得权限
+            this.requestPermissions( // 请求授权
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
+                            Manifest.permission.ACCESS_COARSE_LOCATION,
+                            Manifest.permission.READ_EXTERNAL_STORAGE},
+                    ACCESS_LOCATION);// 自定义常量,任意整型
         }
     }
 
@@ -139,16 +129,13 @@ public class MainActivity extends AppCompatActivity {
         gForceProfile.setScanCallback(new ScanCallback() {
             @Override
             public void onScanResult(BluetoothDevice bluetoothDevice, int rssi) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (bluetoothDevice != null && bluetoothDevice.getName() != null && bluetoothDevice.getName().contains("gForce") || bluetoothDevice != null && bluetoothDevice.getName() != null && bluetoothDevice.getName().contains("OYM_") || bluetoothDevice != null && bluetoothDevice.getName() != null && bluetoothDevice.getName().contains("OHand") || bluetoothDevice != null && bluetoothDevice.getName() != null && bluetoothDevice.getName().contains("Nucleus")) {
-                            Log.i(TAG, "Device discovered: " + bluetoothDevice.toString() + ", Rssi:" + rssi);
+                runOnUiThread(() -> {
+                    if (bluetoothDevice != null && bluetoothDevice.getName() != null && bluetoothDevice.getName().contains("gForce") || bluetoothDevice != null && bluetoothDevice.getName() != null && bluetoothDevice.getName().contains("OYM_") || bluetoothDevice != null && bluetoothDevice.getName() != null && bluetoothDevice.getName().contains("OHand") || bluetoothDevice != null && bluetoothDevice.getName() != null && bluetoothDevice.getName().contains("Nucleus")) {
+                        Log.i(TAG, "Device discovered: " + bluetoothDevice.toString() + ", Rssi:" + rssi);
 
-                            bluetoothDevices.add(bluetoothDevice);
+                        bluetoothDevices.add(bluetoothDevice);
 
-                            resultsAdapter.addScanResult(new ScanResult(bluetoothDevice, rssi));
-                        }
+                        resultsAdapter.addScanResult(new ScanResult(bluetoothDevice, rssi));
                     }
                 });
             }

@@ -2,8 +2,6 @@ package com.oymotion.gforceprofiledemo;
 
 import android.bluetooth.BluetoothDevice;
 
-import androidx.annotation.NonNull;
-
 public class ScanResult {
     private final BluetoothDevice bluetoothDevice;
     private final int rssi;

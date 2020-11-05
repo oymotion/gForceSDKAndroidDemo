@@ -86,3 +86,5 @@ lint/tmp/
 
 # Android Profiling
 *.hprof
+/.idea/markdown-navigator-enh.xml
+/.idea/markdown-navigator.xml

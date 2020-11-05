@@ -10,12 +10,13 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.oymotion.gforceprofile.BluetoothDeviceStateEx;
+import com.oymotion.gforceprofile.CommandResponseCallback;
 import com.oymotion.gforceprofile.DataNotifFlags;
+import com.oymotion.gforceprofile.DataNotificationCallback;
 import com.oymotion.gforceprofile.GF_RET_CODE;
 import com.oymotion.gforceprofile.GForceProfile;
 import com.oymotion.gforceprofile.NotifDataType;
 import com.oymotion.gforceprofile.ResponseResult;
-import com.oymotion.gforceprofile.UserNotificationCallback;
 
 import java.util.Arrays;
 
@@ -28,6 +29,10 @@ public class DeviceActivity extends AppCompatActivity {
     Button btn_conncet;
     @BindView(R.id.start)
     Button btn_start;
+    @BindView(R.id.get_firmware_version)
+    Button btn_getEmgConfig;
+    @BindView(R.id.set)
+    Button btn_set;
     public static final String EXTRA_MAC_ADDRESS = "extra_mac_address";
     private BluetoothDevice bluetoothDevice;
     private BluetoothDeviceStateEx state = BluetoothDeviceStateEx.disconnected;
@@ -36,10 +41,11 @@ public class DeviceActivity extends AppCompatActivity {
     private String macAddress;
     private TextView textViewState;
     private TextView textViewQuaternion;
+    private TextView textFirmwareVersion;
     private Handler handler;
     private Runnable runnable;
     private boolean notifying = false;
-    private UserNotificationCallback notifyCb;
+    private DataNotificationCallback notifyCb;
 
     private GForceProfile gForceProfile;
 
@@ -59,6 +65,15 @@ public class DeviceActivity extends AppCompatActivity {
             handler.postDelayed(runnable, 500);
         } else {
             gForceProfile.disconnect();
+            setSucceeded = false;
+
+            runOnUiThread(new Runnable() {
+                public void run() {
+                    textViewQuaternion.setText("W: " + "\nX: " + "\nY: " + "\nZ: ");
+                    textFirmwareVersion.setText("FirmwareVersion: ");
+
+                }
+            });
         }
 
     }
@@ -67,23 +82,23 @@ public class DeviceActivity extends AppCompatActivity {
     public void onSetClick() {
         if (state != BluetoothDeviceStateEx.ready || setSucceeded) return;
 
-        GF_RET_CODE result = gForceProfile.setDataNotifSwitch(DataNotifFlags.DNF_QUATERNION, new UserNotificationCallback() {
+        GF_RET_CODE result = gForceProfile.setDataNotifSwitch(DataNotifFlags.DNF_QUATERNION, new CommandResponseCallback() {
             @Override
-            public void onData(byte[] data) {
-                Log.i("DeviceActivity", "onData: " + Arrays.toString(data));
+            public void onSetCommandResponse(int resp) {
+                Log.i("DeviceActivity", "onSetCommandResponse: " + resp);
 
-                if (data[0] == ResponseResult.RSP_CODE_SUCCESS) {
+                if (resp == ResponseResult.RSP_CODE_SUCCESS) {
                     returnSucceeded = true;
 
                     runOnUiThread(new Runnable() {
                         public void run() {
-                            textViewState.setText("Device State: " + "Set Notification succeeded");
+                            textViewState.setText("Device State: " + "Set Data Switch succeeded");
                         }
                     });
                 } else {
                     runOnUiThread(new Runnable() {
                         public void run() {
-                            textViewState.setText("Device State: " + "Set Notification failed, resp code: " + data[0]);
+                            textViewState.setText("Device State: " + "Set Data Switch failed, resp code: " + resp);
                         }
                     });
                 }
@@ -95,7 +110,7 @@ public class DeviceActivity extends AppCompatActivity {
         } else {
             runOnUiThread(new Runnable() {
                 public void run() {
-                    textViewState.setText("Device State: " + "Set Notification failed: " + result.toString());
+                    textViewState.setText("Device State: " + "Set Data Switch failed: " + result.toString());
                 }
             });
         }
@@ -104,27 +119,29 @@ public class DeviceActivity extends AppCompatActivity {
     @OnClick(R.id.start)
     public void onStartClick() {
         if (notifying) {
-            btn_start.setText("Start Notification");
+            btn_start.setText("Start Data Notification");
 
-            gForceProfile.stopDataNotification(notifyCb);
+            gForceProfile.stopDataNotification();
 
             notifying = false;
         } else {
             if (state != BluetoothDeviceStateEx.ready || returnSucceeded == false) return;
 
-            notifyCb = new UserNotificationCallback() {
+            notifyCb = new DataNotificationCallback() {
                 @Override
                 public void onData(byte[] data) {
                     if (data[0] == NotifDataType.NTF_QUAT_FLOAT_DATA && data.length == 17) {
+                        Log.i("DeviceActivity","Quat data: " + Arrays.toString(data));
+
                         byte[] W = new byte[4];
                         byte[] X = new byte[4];
                         byte[] Y = new byte[4];
                         byte[] Z = new byte[4];
 
                         System.arraycopy(data, 1, W, 0, 4);
-                        System.arraycopy(data, 1, X, 0, 4);
-                        System.arraycopy(data, 1, Y, 0, 4);
-                        System.arraycopy(data, 1, Z, 0, 4);
+                        System.arraycopy(data, 5, X, 0, 4);
+                        System.arraycopy(data, 9, Y, 0, 4);
+                        System.arraycopy(data, 13, Z, 0, 4);
 
                         float w = getFloat(W);
                         float x = getFloat(X);
@@ -142,10 +159,27 @@ public class DeviceActivity extends AppCompatActivity {
 
             gForceProfile.startDataNotification(notifyCb);
 
-            btn_start.setText("Stop Notification");
+            btn_start.setText("Stop Data Notification");
             notifying = true;
         }
     }
+
+    @OnClick(R.id.get_firmware_version)
+    public void onGetEmgConfigClick() {
+        gForceProfile.getControllerFirmwareVersion(new CommandResponseCallback() {
+            @Override
+            public void onGetControllerFirmwareVersion(int resp, String firmwareVersion) {
+                Log.i("DeviceActivity", "\nfirmwareVersion: " + firmwareVersion);
+
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        textFirmwareVersion.setText("FirmwareVersion: " + firmwareVersion);
+                    }
+                });
+            }
+        }, 5000);
+    }
+
 
     public static float getFloat(byte[] b) {
         int accum = 0;
@@ -194,6 +228,7 @@ public class DeviceActivity extends AppCompatActivity {
         gForceProfile = new GForceProfile(this);
         textViewState = this.findViewById(R.id.text_device_state);
         textViewQuaternion = this.findViewById(R.id.text_quaternion);
+        textFirmwareVersion = this.findViewById(R.id.text_firmware_version);
     }
 
     @Override

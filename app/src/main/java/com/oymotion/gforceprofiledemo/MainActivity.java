@@ -126,11 +126,14 @@ public class MainActivity extends AppCompatActivity {
     private void scanBleDevices() {
         resultsAdapter.clearScanResults();
 
-        gForceProfile.setScanCallback(new ScanCallback() {
+        gForceProfile.startScan(new ScanCallback() {
             @Override
             public void onScanResult(BluetoothDevice bluetoothDevice, int rssi) {
                 runOnUiThread(() -> {
-                    if (bluetoothDevice != null && bluetoothDevice.getName() != null && bluetoothDevice.getName().contains("gForce") || bluetoothDevice != null && bluetoothDevice.getName() != null && bluetoothDevice.getName().contains("OYM_") || bluetoothDevice != null && bluetoothDevice.getName() != null && bluetoothDevice.getName().contains("OHand") || bluetoothDevice != null && bluetoothDevice.getName() != null && bluetoothDevice.getName().contains("Nucleus")) {
+                    //Log.d(TAG, "Device discovered: " + bluetoothDevice.toString() + ", Rssi:" + rssi);
+
+                    if (bluetoothDevice != null && bluetoothDevice.getName() != null &&
+                            bluetoothDevice.getName().contains("gForce")) {
                         Log.i(TAG, "Device discovered: " + bluetoothDevice.toString() + ", Rssi:" + rssi);
 
                         bluetoothDevices.add(bluetoothDevice);
@@ -146,7 +149,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        gForceProfile.startScan();
         isScanning = true;
     }
 
@@ -193,9 +195,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void onAdapterItemClick(ScanResult scanResults) {
-        final String macAddress = scanResults.getBluetoothDevice().getAddress();
         final Intent intent = new Intent(this, DeviceActivity.class);
-        intent.putExtra(DeviceActivity.EXTRA_MAC_ADDRESS, macAddress);
+        intent.putExtra(DeviceActivity.EXTRA_DEVICE_NAME, scanResults.getBluetoothDevice().getName());
+        intent.putExtra(DeviceActivity.EXTRA_MAC_ADDRESS, scanResults.getBluetoothDevice().getAddress());
         startActivity(intent);
     }
 

@@ -42,10 +42,10 @@ class ScanResultsAdapter extends RecyclerView.Adapter<ScanResultsAdapter.ViewHol
             lhs.getBluetoothDevice().getAddress().compareTo(rhs.getBluetoothDevice().getAddress());
     private final List<ScanResult> data = new ArrayList<>();
     private OnAdapterItemClickListener onAdapterItemClickListener;
+
     private final View.OnClickListener onClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-
             if (onAdapterItemClickListener != null) {
                 onAdapterItemClickListener.onAdapterViewClick(v);
             }
@@ -54,9 +54,7 @@ class ScanResultsAdapter extends RecyclerView.Adapter<ScanResultsAdapter.ViewHol
 
     void addScanResult(ScanResult bleScanResult) {
         // Not the best way to ensure distinct devices, just for sake on the demo.
-
         for (int i = 0; i < data.size(); i++) {
-
             if (data.get(i).getBluetoothDevice().equals(bleScanResult.getBluetoothDevice())) {
                 data.set(i, bleScanResult);
                 notifyItemChanged(i);
@@ -87,7 +85,7 @@ class ScanResultsAdapter extends RecyclerView.Adapter<ScanResultsAdapter.ViewHol
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         final ScanResult rxBleScanResult = data.get(position);
         final BluetoothDevice bluetoothDevice = rxBleScanResult.getBluetoothDevice();
-        holder.line1.setText(String.format(Locale.getDefault(), "%s (%s)", bluetoothDevice.getAddress(), bluetoothDevice.getAddress()));
+        holder.line1.setText(String.format(Locale.getDefault(), "%s (%s)", bluetoothDevice.getName(), bluetoothDevice.getAddress()));
         holder.line2.setText(String.format(Locale.getDefault(), "RSSI: %d", rxBleScanResult.getRssi()));
     }
 

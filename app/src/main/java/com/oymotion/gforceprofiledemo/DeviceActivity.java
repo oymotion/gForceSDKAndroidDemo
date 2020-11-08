@@ -40,7 +40,6 @@ public class DeviceActivity extends AppCompatActivity {
     private Handler handler;
     private Runnable runnable;
     private boolean notifying = false;
-    private DataNotificationCallback notifyCb;
 
     private GForceProfile gForceProfile;
 
@@ -128,7 +127,7 @@ public class DeviceActivity extends AppCompatActivity {
         } else {
             if (state != GForceProfile.BluetoothDeviceStateEx.ready || returnSucceeded == false) return;
 
-            notifyCb = new DataNotificationCallback() {
+            gForceProfile.startDataNotification(new DataNotificationCallback() {
                 @Override
                 public void onData(byte[] data) {
                     if (data[0] == GForceProfile.NotifDataType.NTF_QUAT_FLOAT_DATA && data.length == 17) {
@@ -156,9 +155,7 @@ public class DeviceActivity extends AppCompatActivity {
                         });
                     }
                 }
-            };
-
-            gForceProfile.startDataNotification(notifyCb);
+            });
 
             btn_start.setText("Stop Data Notification");
             notifying = true;

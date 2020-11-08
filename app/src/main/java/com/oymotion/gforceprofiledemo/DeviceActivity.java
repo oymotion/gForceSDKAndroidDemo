@@ -46,8 +46,7 @@ public class DeviceActivity extends AppCompatActivity {
     @OnClick(R.id.connect)
     public void onConnectClick() {
         if (state != GForceProfile.BluetoothDeviceStateEx.ready && state != GForceProfile.BluetoothDeviceStateEx.connected) {
-            gForceProfile.setDevice(macAddress);
-            GForceProfile.GF_RET_CODE ret_code = gForceProfile.connect(false);
+            GForceProfile.GF_RET_CODE ret_code = gForceProfile.connect(macAddress,false);
 
             if (ret_code != GForceProfile.GF_RET_CODE.GF_SUCCESS) {
                 Log.e("DeviceActivity", "Connect failed, ret_code: " + ret_code);

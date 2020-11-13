@@ -45,6 +45,8 @@ public class DeviceActivity extends AppCompatActivity {
 
     @OnClick(R.id.connect)
     public void onConnectClick() {
+        Log.i("DeviceActivity", "[onConnectClick] state=" + state);
+
         if (state != GForceProfile.BluetoothDeviceStateEx.ready && state != GForceProfile.BluetoothDeviceStateEx.connected) {
             GForceProfile.GF_RET_CODE ret_code = gForceProfile.connect(macAddress,false);
 
@@ -209,7 +211,8 @@ public class DeviceActivity extends AppCompatActivity {
             }
             else if (state == GForceProfile.BluetoothDeviceStateEx.connected) {
                 btn_conncet.setText("Disconnect");
-            } if (state == GForceProfile.BluetoothDeviceStateEx.ready) {
+            }
+            if (state == GForceProfile.BluetoothDeviceStateEx.ready) {
                 btn_conncet.setText("Disconnect");
 
                 btn_getFirmwareVersion.setEnabled(true);

@@ -33,8 +33,6 @@ public class DeviceActivity extends AppCompatActivity {
     public static final String EXTRA_MAC_ADDRESS = "extra_mac_address";
 
     private GForceProfile.BluetoothDeviceStateEx state = GForceProfile.BluetoothDeviceStateEx.disconnected;
-    private boolean setSucceeded = false;
-    private boolean returnSucceeded = false;
     private String macAddress;
     private TextView textViewState;
     private TextView textViewQuaternion;
@@ -66,14 +64,13 @@ public class DeviceActivity extends AppCompatActivity {
             handler.removeCallbacks(runnable);
             handler.postDelayed(runnable, 1000);
         } else {
-
             boolean success = gForceProfile.disconnect();
+
             if(success){
                 btn_getFirmwareVersion.setEnabled(false);
                 btn_set.setEnabled(false);
                 btn_start.setEnabled(false);
 
-                setSucceeded = false;
                 notifying = false;
 
                 runOnUiThread(new Runnable() {
@@ -88,18 +85,25 @@ public class DeviceActivity extends AppCompatActivity {
 
     }
 
+    private int response = -1;
+
     @OnClick(R.id.set)
     public void onSetClick() {
-        if (state != GForceProfile.BluetoothDeviceStateEx.ready || setSucceeded) return;
+        if (state != GForceProfile.BluetoothDeviceStateEx.ready) return;
 
-        GForceProfile.GF_RET_CODE result = gForceProfile.setDataNotifSwitch(GForceProfile.DataNotifFlags.DNF_QUATERNION, new CommandResponseCallback() {
+        int flags = GForceProfile.DataNotifFlags.DNF_EMG_RAW | GForceProfile.DataNotifFlags.DNF_QUATERNION | GForceProfile.DataNotifFlags.DNF_EULERANGLE;
+
+        GForceProfile.GF_RET_CODE result;
+
+        response = -1;
+
+        result = gForceProfile.setDataNotifSwitch(flags, new CommandResponseCallback() {
             @Override
             public void onSetCommandResponse(int resp) {
-                Log.i("DeviceActivity", "onSetCommandResponse: " + resp);
+                Log.i("DeviceActivity", "response of setDataNotifSwitch(): " + resp);
+                response = resp;
 
                 if (resp == GForceProfile.ResponseResult.RSP_CODE_SUCCESS) {
-                    returnSucceeded = true;
-
                     runOnUiThread(new Runnable() {
                         public void run() {
                             textViewState.setText("Device State: " + "Set Data Switch succeeded");
@@ -115,15 +119,53 @@ public class DeviceActivity extends AppCompatActivity {
             }
         }, 5000);
 
-        Log.i("DeviceActivity", " result " + result);
-        if (result == GForceProfile.GF_RET_CODE.GF_SUCCESS) {
-            setSucceeded = true;
-        } else {
+        Log.i("DeviceActivity", "setDataNotifSwitch() result:" + result);
+
+        if (result != GForceProfile.GF_RET_CODE.GF_SUCCESS) {
             runOnUiThread(new Runnable() {
                 public void run() {
-                    textViewState.setText("Device State: " + "Set Data Switch failed: " + result.toString());
+                    textViewState.setText("Device State: " + "Set Data Switch failed.");
                 }
             });
+        }
+
+        while (response == -1) {
+            try {
+                Thread.currentThread().sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        if (response != GForceProfile.ResponseResult.RSP_CODE_SUCCESS) return;
+
+        if ((flags | GForceProfile.DataNotifFlags.DNF_EMG_RAW) == 0) {
+            btn_start.setEnabled(true);
+        } else {
+            result = gForceProfile.setEmgRawDataConfig(500, 0xFF, 128, 8, new CommandResponseCallback() {
+                @Override
+                public void onSetCommandResponse(int resp) {
+                    Log.i("DeviceActivity", "response of setEmgRawDataConfig(): " + resp);
+
+                    if (resp == GForceProfile.ResponseResult.RSP_CODE_SUCCESS) {
+                        btn_start.setEnabled(true);
+
+                        runOnUiThread(new Runnable() {
+                            public void run() {
+                                textViewState.setText("Device State: " + "Set Data Switch succeeded");
+                            }
+                        });
+                    }
+                }
+            }, 5000);
+
+            if (result != GForceProfile.GF_RET_CODE.GF_SUCCESS) {
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        textViewState.setText("Device State: " + "setEmgRawDataConfig() failed.");
+                    }
+                });
+            }
         }
     }
 
@@ -136,11 +178,13 @@ public class DeviceActivity extends AppCompatActivity {
 
             notifying = false;
         } else {
-            if (state != GForceProfile.BluetoothDeviceStateEx.ready || returnSucceeded == false) return;
+            if (state != GForceProfile.BluetoothDeviceStateEx.ready) return;
 
             gForceProfile.startDataNotification(new DataNotificationCallback() {
                 @Override
                 public void onData(byte[] data) {
+                    Log.i("DeviceActivity","data type: " + data[0] + ", len: " + data.length);
+
                     if (data[0] == GForceProfile.NotifDataType.NTF_QUAT_FLOAT_DATA && data.length == 17) {
                         Log.i("DeviceActivity","Quat data: " + Arrays.toString(data));
 
@@ -186,8 +230,10 @@ public class DeviceActivity extends AppCompatActivity {
                 }
             });
             }
-        }, 50000);
-        Log.i("DeviceActivity", " result " + result);
+        }, 5000);
+
+        Log.i("DeviceActivity", "getControllerFirmwareVersion() result " + result);
+
         if (result != GForceProfile.GF_RET_CODE.GF_SUCCESS) {
             textFirmwareVersion.setText("FirmwareVersion: Error : " + result);
         }
@@ -228,7 +274,7 @@ public class DeviceActivity extends AppCompatActivity {
 
                 btn_getFirmwareVersion.setEnabled(true);
                 btn_set.setEnabled(true);
-                btn_start.setEnabled(true);
+                // btn_start.setEnabled(true);
             }
         }
     }
@@ -240,14 +286,6 @@ public class DeviceActivity extends AppCompatActivity {
         ButterKnife.bind(this);
         macAddress = getIntent().getStringExtra(EXTRA_MAC_ADDRESS);
         getSupportActionBar().setSubtitle(getString(R.string.dev_name_with_mac, getIntent().getStringExtra(EXTRA_DEVICE_NAME), macAddress));
-        handler = new Handler();
-
-        runnable = new Runnable() {
-            public void run() {
-                updateState();
-                handler.postDelayed(this, 1000);
-            }
-        };
 
         gForceProfile = new GForceProfile(this);
         textViewState = this.findViewById(R.id.text_device_state);
@@ -257,6 +295,15 @@ public class DeviceActivity extends AppCompatActivity {
         btn_getFirmwareVersion.setEnabled(false);
         btn_set.setEnabled(false);
         btn_start.setEnabled(false);
+
+        handler = new Handler();
+
+        runnable = new Runnable() {
+            public void run() {
+                updateState();
+                handler.postDelayed(this, 1000);
+            }
+        };
     }
 
     @Override

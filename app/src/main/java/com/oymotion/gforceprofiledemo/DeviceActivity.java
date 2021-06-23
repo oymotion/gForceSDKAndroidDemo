@@ -103,19 +103,19 @@ public class DeviceActivity extends AppCompatActivity {
                 Log.i("DeviceActivity", "response of setDataNotifSwitch(): " + resp);
                 response = resp;
 
+                String msg;
+
                 if (resp == GForceProfile.ResponseResult.RSP_CODE_SUCCESS) {
-                    runOnUiThread(new Runnable() {
-                        public void run() {
-                            textViewState.setText("Device State: " + "Set Data Switch succeeded");
-                        }
-                    });
+                    msg = "Device State: " + "Set Data Switch succeeded";
                 } else {
-                    runOnUiThread(new Runnable() {
-                        public void run() {
-                            textViewState.setText("Device State: " + "Set Data Switch failed, resp code: " + resp);
-                        }
-                    });
+                    msg = "Device State: " + "Set Data Switch failed, resp code: " + resp;
                 }
+
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        textViewState.setText(msg);
+                    }
+                });
             }
         }, 5000);
 
@@ -124,7 +124,7 @@ public class DeviceActivity extends AppCompatActivity {
         if (result != GForceProfile.GF_RET_CODE.GF_SUCCESS) {
             runOnUiThread(new Runnable() {
                 public void run() {
-                    textViewState.setText("Device State: " + "Set Data Switch failed.");
+                    textViewState.setText("Device State: " + "setDataNotifSwitch() failed.");
                 }
             });
         }
@@ -147,15 +147,20 @@ public class DeviceActivity extends AppCompatActivity {
                 public void onSetCommandResponse(int resp) {
                     Log.i("DeviceActivity", "response of setEmgRawDataConfig(): " + resp);
 
+                    String msg;
+
                     if (resp == GForceProfile.ResponseResult.RSP_CODE_SUCCESS) {
                         btn_start.setEnabled(true);
-
-                        runOnUiThread(new Runnable() {
-                            public void run() {
-                                textViewState.setText("Device State: " + "Set Data Switch succeeded");
-                            }
-                        });
+                        msg = "Device State: " + "Set EMG Config succeeded";
+                    } else {
+                        msg = "Device State: " + "Set EMG Config failed, resp code: " + resp;
                     }
+
+                    runOnUiThread(new Runnable() {
+                        public void run() {
+                            textViewState.setText(msg);
+                        }
+                    });
                 }
             }, 5000);
 

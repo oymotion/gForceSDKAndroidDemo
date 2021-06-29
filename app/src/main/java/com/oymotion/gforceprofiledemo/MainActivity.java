@@ -107,7 +107,12 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        gForceProfile = new GForceProfile(this);
+        gForceProfile = new GForceProfile(new GForceProfile.GForceErrorCallback(){
+            @Override
+            public void onGForceErrorCallback(String errorMsg) {
+                Toast.makeText(MainActivity.this, errorMsg, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @OnClick(R.id.scan_toggle_btn)

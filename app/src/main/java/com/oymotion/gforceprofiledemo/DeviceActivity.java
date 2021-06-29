@@ -2,7 +2,6 @@ package com.oymotion.gforceprofiledemo;
 
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
@@ -50,10 +49,10 @@ public class DeviceActivity extends AppCompatActivity {
         Log.i("DeviceActivity", "[onConnectClick] state=" + state);
 
         if (state != GForceProfile.BluetoothDeviceStateEx.connected &&
-            state != GForceProfile.BluetoothDeviceStateEx.connecting &&
-            state != GForceProfile.BluetoothDeviceStateEx.ready) {
+                state != GForceProfile.BluetoothDeviceStateEx.connecting &&
+                state != GForceProfile.BluetoothDeviceStateEx.ready) {
 
-            GForceProfile.GF_RET_CODE ret_code = gForceProfile.connect(macAddress,false);
+            GForceProfile.GF_RET_CODE ret_code = gForceProfile.connect(macAddress, false);
 
             if (ret_code != GForceProfile.GF_RET_CODE.GF_SUCCESS) {
                 Log.e("DeviceActivity", "Connect failed, ret_code: " + ret_code);
@@ -66,7 +65,7 @@ public class DeviceActivity extends AppCompatActivity {
         } else {
             boolean success = gForceProfile.disconnect();
 
-            if(success){
+            if (success) {
                 btn_getFirmwareVersion.setEnabled(false);
                 btn_set.setEnabled(false);
                 btn_start.setEnabled(false);
@@ -188,10 +187,10 @@ public class DeviceActivity extends AppCompatActivity {
             gForceProfile.startDataNotification(new DataNotificationCallback() {
                 @Override
                 public void onData(byte[] data) {
-                    Log.i("DeviceActivity","data type: " + data[0] + ", len: " + data.length);
+                    Log.i("DeviceActivity", "data type: " + data[0] + ", len: " + data.length);
 
                     if (data[0] == GForceProfile.NotifDataType.NTF_QUAT_FLOAT_DATA && data.length == 17) {
-                        Log.i("DeviceActivity","Quat data: " + Arrays.toString(data));
+                        Log.i("DeviceActivity", "Quat data: " + Arrays.toString(data));
 
                         byte[] W = new byte[4];
                         byte[] X = new byte[4];
@@ -227,13 +226,13 @@ public class DeviceActivity extends AppCompatActivity {
         GForceProfile.GF_RET_CODE result = gForceProfile.getControllerFirmwareVersion(new CommandResponseCallback() {
             @Override
             public void onGetControllerFirmwareVersion(int resp, String firmwareVersion) {
-            Log.i("DeviceActivity", "\nfirmwareVersion: " + firmwareVersion);
+                Log.i("DeviceActivity", "\nfirmwareVersion: " + firmwareVersion);
 
-            runOnUiThread(new Runnable() {
-                public void run() {
-                    textFirmwareVersion.setText("FirmwareVersion: " + firmwareVersion);
-                }
-            });
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        textFirmwareVersion.setText("FirmwareVersion: " + firmwareVersion);
+                    }
+                });
             }
         }, 5000);
 
@@ -268,13 +267,13 @@ public class DeviceActivity extends AppCompatActivity {
 
             if (state == GForceProfile.BluetoothDeviceStateEx.disconnected) {
                 btn_conncet.setText("Connect");
-            }else if (state == GForceProfile.BluetoothDeviceStateEx.connected) {
+            } else if (state == GForceProfile.BluetoothDeviceStateEx.connected) {
                 btn_conncet.setText("Disconnect");
-            }else if (state == GForceProfile.BluetoothDeviceStateEx.connecting) {
+            } else if (state == GForceProfile.BluetoothDeviceStateEx.connecting) {
                 btn_conncet.setText("Disconnect");
-            }else if (state == GForceProfile.BluetoothDeviceStateEx.disconnecting) {
+            } else if (state == GForceProfile.BluetoothDeviceStateEx.disconnecting) {
                 btn_conncet.setText("Connect");
-            }else if (state == GForceProfile.BluetoothDeviceStateEx.ready) {
+            } else if (state == GForceProfile.BluetoothDeviceStateEx.ready) {
                 btn_conncet.setText("Disconnect");
 
                 btn_getFirmwareVersion.setEnabled(true);
@@ -292,7 +291,13 @@ public class DeviceActivity extends AppCompatActivity {
         macAddress = getIntent().getStringExtra(EXTRA_MAC_ADDRESS);
         getSupportActionBar().setSubtitle(getString(R.string.dev_name_with_mac, getIntent().getStringExtra(EXTRA_DEVICE_NAME), macAddress));
 
-        gForceProfile = new GForceProfile(this);
+        gForceProfile = new GForceProfile(new GForceProfile.GForceErrorCallback() {
+            @Override
+            public void onGForceErrorCallback(String errorMsg) {
+                Toast.makeText(DeviceActivity.this, errorMsg, Toast.LENGTH_SHORT).show();
+            }
+        });
+
         textViewState = this.findViewById(R.id.text_device_state);
         textViewQuaternion = this.findViewById(R.id.text_quaternion);
         textFirmwareVersion = this.findViewById(R.id.text_firmware_version);
@@ -314,12 +319,12 @@ public class DeviceActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        handler.removeCallbacks(runnable);
-        gForceProfile.disconnect();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        handler.removeCallbacks(runnable);
+        gForceProfile.disconnect();
     }
 }

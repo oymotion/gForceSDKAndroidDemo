@@ -72,17 +72,13 @@ public class DeviceActivity extends AppCompatActivity {
 
                 notifying = false;
 
-                runOnUiThread(new Runnable() {
-                    public void run() {
-                        btn_start.setText("Start Data Notification");
-                        textViewQuaternion.setText("W: " + "\nX: " + "\nY: " + "\nZ: ");
-                        textFirmwareVersion.setText("FirmwareVersion: ");
-                    }
-                });
+                btn_start.setText("Start Data Notification");
+                textViewQuaternion.setText("W: " + "\nX: " + "\nY: " + "\nZ: ");
+                textFirmwareVersion.setText("FirmwareVersion: ");
             }
         }
-
     }
+
 
     private int response = -1;
 
@@ -121,11 +117,7 @@ public class DeviceActivity extends AppCompatActivity {
         Log.i("DeviceActivity", "setDataNotifSwitch() result:" + result);
 
         if (result != GForceProfile.GF_RET_CODE.GF_SUCCESS) {
-            runOnUiThread(new Runnable() {
-                public void run() {
-                    textViewState.setText("Device State: " + "setDataNotifSwitch() failed.");
-                }
-            });
+            textViewState.setText("Device State: " + "setDataNotifSwitch() failed.");
         }
 
         while (response == -1) {
@@ -149,7 +141,6 @@ public class DeviceActivity extends AppCompatActivity {
                     String msg;
 
                     if (resp == GForceProfile.ResponseResult.RSP_CODE_SUCCESS) {
-                        btn_start.setEnabled(true);
                         msg = "Device State: " + "Set EMG Config succeeded";
                     } else {
                         msg = "Device State: " + "Set EMG Config failed, resp code: " + resp;
@@ -157,6 +148,10 @@ public class DeviceActivity extends AppCompatActivity {
 
                     runOnUiThread(new Runnable() {
                         public void run() {
+                            if (resp == GForceProfile.ResponseResult.RSP_CODE_SUCCESS) {
+                                btn_start.setEnabled(true);
+                            }
+
                             textViewState.setText(msg);
                         }
                     });
@@ -164,11 +159,7 @@ public class DeviceActivity extends AppCompatActivity {
             }, 5000);
 
             if (result != GForceProfile.GF_RET_CODE.GF_SUCCESS) {
-                runOnUiThread(new Runnable() {
-                    public void run() {
-                        textViewState.setText("Device State: " + "setEmgRawDataConfig() failed.");
-                    }
-                });
+                textViewState.setText("Device State: " + "setEmgRawDataConfig() failed.");
             }
         }
     }
@@ -266,19 +257,39 @@ public class DeviceActivity extends AppCompatActivity {
             state = newState;
 
             if (state == GForceProfile.BluetoothDeviceStateEx.disconnected) {
-                btn_conncet.setText("Connect");
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        btn_conncet.setText("Connect");
+                    }
+                });
             } else if (state == GForceProfile.BluetoothDeviceStateEx.connected) {
-                btn_conncet.setText("Disconnect");
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        btn_conncet.setText("Disconnect");
+                    }
+                });
             } else if (state == GForceProfile.BluetoothDeviceStateEx.connecting) {
-                btn_conncet.setText("Disconnect");
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        btn_conncet.setText("Disconnect");
+                    }
+                });
             } else if (state == GForceProfile.BluetoothDeviceStateEx.disconnecting) {
-                btn_conncet.setText("Connect");
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        btn_conncet.setText("Connect");
+                    }
+                });
             } else if (state == GForceProfile.BluetoothDeviceStateEx.ready) {
-                btn_conncet.setText("Disconnect");
+                runOnUiThread(new Runnable() {
+                    public void run() {
+                        btn_conncet.setText("Disconnect");
 
-                btn_getFirmwareVersion.setEnabled(true);
-                btn_set.setEnabled(true);
-                // btn_start.setEnabled(true);
+                        btn_getFirmwareVersion.setEnabled(true);
+                        btn_set.setEnabled(true);
+                        // btn_start.setEnabled(true);
+                    }
+                });
             }
         }
     }
